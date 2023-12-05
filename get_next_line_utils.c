@@ -6,7 +6,7 @@
 /*   By: waon-in <waon-in@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/04 23:58:40 by waon-in           #+#    #+#             */
-/*   Updated: 2023/12/06 03:05:41 by waon-in          ###   ########.fr       */
+/*   Updated: 2023/12/06 03:27:59 by waon-in          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ char	*ft_strjoin(const char *s1, const char *s2)
 	int				i;
 	int				j;
 	int				size;
-	char		*str;
+	char			*str;
 
 	len = ft_strlen(s1) + ft_strlen(s2);
 	str = malloc((size + 1) * sizeof(char));
@@ -48,4 +48,20 @@ char	*ft_strjoin(const char *s1, const char *s2)
 	}
 	str(size) = 0;
 	return (str);
+}
+
+char	*ft_strchr(const char *s, int c)
+{
+	int		i;
+
+	i = 0;
+	while (s[i])
+	{
+		if (s[i] == (char) c)
+				return((char *)(s + i));
+		i++;
+	}
+	if (s[i] == (char) c)
+			return ((char *)(s + i));
+		return (NULL);
 }
