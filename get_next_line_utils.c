@@ -6,7 +6,7 @@
 /*   By: waon-in <waon-in@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/04 23:58:40 by waon-in           #+#    #+#             */
-/*   Updated: 2023/12/07 06:04:21 by waon-in          ###   ########.fr       */
+/*   Updated: 2023/12/08 15:43:16 by waon-in          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,21 +66,26 @@ char	*ft_strchr(const char *s, int c)
 	return (NULL);
 }
 
-char	*ft_strndup(const char *s, size_t n)
+void	ft_bzero(void *s, size_t n)
 {
-	char	*ptr;
-	size_t	i;
+	size_t			i;
+	unsigned char	*ptr;
 
-	i = ft_strlen(s);
-	ptr = malloc(sizeof(char) * (n + 1));
+	ptr = (unsigned char *)s;
+	i = 0;
+	while (i < n)
+	{
+		(ptr)[i++] = '\0';
+	}
+}
+
+void	*ft_calloc(size_t count, size_t size)
+{
+	void	*ptr;
+
+	ptr = malloc(count * size);
 	if (!ptr)
 		return (NULL);
-	i = 0;
-	while (s[i] && i < n)
-	{
-		ptr[i] = s[i];
-		i++;
-	}
-	ptr[i] = '\0';
+	ft_bzero(ptr, count * size);
 	return (ptr);
 }
