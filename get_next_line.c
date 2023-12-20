@@ -5,171 +5,103 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: waon-in <waon-in@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/12/08 16:09:40 by waon-in           #+#    #+#             */
-/*   Updated: 2023/12/09 00:52:48 by waon-in          ###   ########.fr       */
+/*   Created: 2023/12/19 19:39:01 by waon-in           #+#    #+#             */
+/*   Updated: 2023/12/20 18:01:12 by waon-in          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-typedef struct s_fd_buffer
+void	ft_check_lst(t_lst **lst)
 {
-	int			fd;
-	char		*buffer;
-	struct s_fd_buffer	*next;
-}	t_fd_buffer;
-
-static	t_fd_buffer *fd_buffers = NULL;
-
-void	ft_free(void *ptr)
-{
-	if (ptr)
-	{
-		t_fd_buffer *current = (t_fd_buffer *)ptr;
-		while (current)
-		{
-			t_fd_buffer *next = current->next;
-			free(current->buffer);
-			free(current);
-			current = next;
-		}
-	}
-}
-
-char	*read_file(int fd, char *res)
-{
-	char	*buffer;
-	int		byte_read;
-
-	if (!res)
-		res = ft_calloc(1, 1);
-	buffer = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
-	byte_read = 1;
-	while (byte_read > 0)
-	{
-		byte_read = read(fd, buffer, BUFFER_SIZE);
-		if (byte_read == -1)
-		{
-			free(buffer);
-			return (NULL);
-		}
-		buffer[byte_read] = 0;
-		res = ft_strjoin(res, buffer);
-		if (ft_strchr(buffer, '\n'))
-			break ;
-	}
-	free(buffer);
-	return (res);
-}
-
-char	*ft_get_line(char *buffer, char end_char)
-{
-	char	*line;
-	int		i;
-
-	i = 0;
-	while (buffer[i] && buffer[i] != end_char)
-		i++;
-	line = (char *)ft_calloc(i + 2, sizeof(char));
-	if (!line)
-		return (NULL);
-	i = 0;
-	while (buffer[i] && buffer[i] != end_char)
-	{
-		line[i] = buffer[i];
-		i++;
-	}
-	if (buffer[i] && buffer[i] == end_char)
-		line[i++] = end_char;
-	line[i] = '\0';
-	return (line);
-}
-
-char	*ft_get_next(char *buffer)
-{
+	t_lst		*last_node;
+	t_lst		*clean_node;
 	int			i;
 	int			j;
-	char		*next_line;
+	char		*buf;
 
+	buf = malloc(BUFFER_SIZE + 1);
+	clean_node = malloc(sizeof(t_lst));
+	if (buf == NULL || clean_node == NULL)
+		return ;
+	last_node = ft_find_last_node(*lst);
 	i = 0;
-	while (buffer[i] && buffer[i] != '\n')
-		i++;
-	if (!buffer[i])
-	{
-		free(buffer);
-		return (NULL);
-	}
-	next_line = (char *)ft_calloc(ft_strlen(buffer) - i + 1, sizeof(char));
-	if (!next_line)
-	{
-		free(buffer);
-		return (NULL);
-	}
-	i++;
 	j = 0;
-	while (buffer[i])
-		next_line[j++] = buffer[i++];
-	free(buffer);
-	return (next_line);
+	while (last_node->content[i] && last_node->content[i] != '\n')
+		++i;
+	while (last_node->content[i] && last_node->content[++i])
+		buf[j++] = last_node->content[i];
+	buf[j] = '\0';
+	clean_node->content = buf;
+	clean_node->next = NULL;
+	ft_freelog(lst, clean_node, buf);
+}
+
+char	*ft_get_line(t_lst *lst)
+{
+	int			str_len;
+	char		*next_str;
+
+	if (lst == NULL)
+		return (NULL);
+	str_len = ft_len_to_nl(lst);
+	next_str = malloc(str_len + 1);
+	if (next_str == NULL)
+		return (NULL);
+	ft_cpy_str(lst, next_str);
+	return (next_str);
+}
+
+void	ft_append(t_lst **lst, char *buf)
+{
+	t_lst	*new_node;
+	t_lst	*last_node;
+
+	last_node = ft_find_last_node(*lst);
+	new_node = malloc(sizeof(t_lst));
+	if (new_node == NULL)
+		return ;
+	if (last_node == NULL)
+		*lst = new_node;
+	else
+		last_node->next = new_node;
+	new_node->content = buf;
+	new_node->next = NULL;
+}
+
+void	ft_read_file(t_lst **lst, int fd)
+{
+	int		char_read;
+	char	*buf;
+
+	while (!ft_found_nl(*lst))
+	{
+		buf = malloc(BUFFER_SIZE + 1);
+		if (lst == NULL)
+			return ;
+		char_read = read(fd, buf, BUFFER_SIZE);
+		if (!char_read)
+		{
+			free(buf);
+			return ;
+		}
+		buf[char_read] = '\0';
+		ft_append(lst, buf);
+	}
 }
 
 char	*get_next_line(int fd)
 {
-	char	*line;
+	static t_lst	*lst;
+	char			*next_line;
 
-	line = NULL;
-	t_fd_buffer *current = fd_buffers;
-	while (current && current->fd != fd)
-		current = current->next;
-	if (!current)
-	{
-		current = (t_fd_buffer *)malloc(sizeof(t_fd_buffer));
-		if (!current)
-			return (NULL);
-		current->fd = fd;
-		current->buffer = NULL;
-		current->next = fd_buffers;
-		fd_buffers = current;
-	}
-	current->buffer = read_file(fd, current->buffer);
-	if (!current->buffer)
+	lst = NULL;
+	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, &next_line, 0) < 0)
 		return (NULL);
-	line = ft_get_line(current->buffer, '\n');
-	current->buffer = ft_get_next(current->buffer);
-	return (line);
+	ft_read_file(&lst, fd);
+	if (lst == NULL)
+		return (NULL);
+	next_line = ft_get_line(lst);
+	ft_check_lst(&lst);
+	return (next_line);
 }
-
-// int main(void)
-// {
-//     int fd1 = open("file1.txt", O_RDONLY);
-//     int fd2 = open("file2.txt", O_RDONLY);
-
-//     char *line1 = get_next_line(fd1);
-//     char *line2 = get_next_line(fd2);
-
-//     // ตรวจสอบผลลัพธ์
-//     if (line1)
-//     {
-//         printf("File 1: %s\n", line1);
-//         free(line1);
-//     }
-//     else
-//     {
-//         printf("End of File 1\n");
-//     }
-
-//     if (line2)
-//     {
-//         printf("File 2: %s\n", line2);
-//         free(line2);
-//     }
-//     else
-//     {
-//         printf("End of File 2\n");
-//     }
-
-//     close(fd1);
-//     close(fd2);
-
-//     return 0;
-// }

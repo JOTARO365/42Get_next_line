@@ -5,87 +5,113 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: waon-in <waon-in@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/12/04 23:58:40 by waon-in           #+#    #+#             */
-/*   Updated: 2023/12/08 15:43:16 by waon-in          ###   ########.fr       */
+/*   Created: 2023/12/20 02:28:55 by waon-in           #+#    #+#             */
+/*   Updated: 2023/12/20 18:03:33 by waon-in          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-size_t	ft_strlen(const char *s)
+int	ft_found_nl(t_lst *lst)
 {
-	size_t	i;
+	int	i;
 
-	i = 0;
-	while (s[i])
-		i++;
-	return (i);
+	if (lst == NULL)
+		return (0);
+	while (lst)
+	{
+		i = 0;
+		while (lst->content[i] && i < BUFFER_SIZE)
+		{
+			if (lst->content[i] == '\n')
+				return (1);
+			++i;
+		}
+		lst = lst->next;
+	}
+	return (0);
 }
 
-char	*ft_strjoin(const char *s1, const char *s2)
+t_lst	*ft_find_last_node(t_lst *lst)
 {
-	int				i;
-	int				j;
-	int				size;
-	char			*str;
-
-	size = ft_strlen(s1) + ft_strlen(s2);
-	str = malloc((size + 1) * sizeof(char));
-	if (!s1 || !s2 || !str)
+	if (lst == NULL)
 		return (NULL);
-	i = 0;
-	while (s1[i] != 0)
-	{
-		str[i] = s1[i];
-		i++;
-	}
-	j = 0;
-	while (s2[j] != 0)
-	{
-		str[i] = s2[j];
-		i++;
-		j++;
-	}
-	str[i] = 0;
-	return (str);
+	while (lst->next)
+		lst = lst->next;
+	return (lst);
 }
 
-char	*ft_strchr(const char *s, int c)
+void	ft_cpy_str(t_lst *lst, char *str)
 {
-	int		i;
+	int	i;
+	int	j;
 
+	if (lst == NULL)
+		return ;
 	i = 0;
-	while (s[i])
+	while (lst)
 	{
-		if (s[i] == (char) c)
-			return ((char *)(s + i));
-		i++;
+		j = 0;
+		while (lst->content[i])
+		{
+			if (lst->content[i] == '\n')
+			{
+				str[j++] = '\n';
+				str[j] = '\0';
+				return ;
+			}
+			str[j++] = lst->content[i++];
+		}
+		lst = lst->next;
 	}
-	if (s[i] == (char) c)
-		return ((char *)(s + i));
-	return (NULL);
+	str[j] = '\0';
 }
 
-void	ft_bzero(void *s, size_t n)
+int	ft_len_to_nl(t_lst *lst)
 {
-	size_t			i;
-	unsigned char	*ptr;
+	int	i;
+	int	len;
 
-	ptr = (unsigned char *)s;
-	i = 0;
-	while (i < n)
+	if (lst == NULL)
+		return (0);
+	len = 0;
+	while (lst)
 	{
-		(ptr)[i++] = '\0';
+		i = 0;
+		while (lst->content[i])
+		{
+			if (lst->content[i] == '\n')
+			{
+				++len;
+				return (len);
+			}
+			++i;
+			++len;
+		}
+		lst = lst->next;
 	}
+	return (len);
 }
 
-void	*ft_calloc(size_t count, size_t size)
+void	ft_freelog(t_lst **lst, t_lst *clean_node, char *buf)
 {
-	void	*ptr;
+	t_lst	*tmp;
 
-	ptr = malloc(count * size);
-	if (!ptr)
-		return (NULL);
-	ft_bzero(ptr, count * size);
-	return (ptr);
+	if (*lst == NULL)
+		return ;
+	while (*lst)
+	{
+		tmp = (*lst)->next;
+		free((*lst)->content);
+		free(*lst);
+		*lst = tmp;
+	}
+	*lst = NULL;
+	if (clean_node->content[0])
+		*lst = clean_node;
+	else
+	{
+		free (buf);
+		free (clean_node);
+	}
 }
