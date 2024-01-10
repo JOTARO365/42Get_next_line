@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line.h                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: waon-in <waon-in@student.42.fr>            +#+  +:+       +#+        */
+/*   By: waon-in <waon-in@student.42>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/20 02:13:55 by waon-in           #+#    #+#             */
-/*   Updated: 2023/12/20 18:07:01 by waon-in          ###   ########.fr       */
+/*   Updated: 2024/01/10 20:36:59 by waon-in          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,26 +21,21 @@
 # include <unistd.h>
 # include <stdlib.h>
 
-typedef struct s_lst
+typedef struct s_list
 {
-	char				*content;
-	struct s_lst		*next;
-}						t_lst;
+	char				*str_buf;
+	struct s_list		*next;
+}						t_list;
 
-//main
-char	*get_next_line(int fd);
+// MAIN
+char	get_next_line(int fd);
 
-// utils
-int		ft_found_nl(t_lst *lst);
-int		ft_len_to_nl(t_lst *lst);
+// UNTILS
+int		len_node(t_list *list);
+int		*found_newline(t_list *list);
 
-t_lst	*ft_find_last_node(t_lst *lst);
+t_list	*find_last_node(t_list *list);
 
-char	*ft_get_line(t_lst *lst);
-
-void	ft_append(t_lst **lst, char *buf);
-void	ft_check_lst(t_lst **lst);
-void	ft_cpy_str(t_lst *lst, char *str);
-void	ft_freelog(t_lst **lst, t_lst *clean_node, char *buf);
-
+void	copy_str(t_list *list, char *str);
+void	dealloc(t_list **list, t_list *clean_node, char *buf);
 #endif
