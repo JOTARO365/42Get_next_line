@@ -6,7 +6,7 @@
 /*   By: waon-in <waon-in@student.42>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/20 02:13:55 by waon-in           #+#    #+#             */
-/*   Updated: 2024/01/10 20:36:59 by waon-in          ###   ########.fr       */
+/*   Updated: 2024/01/12 23:24:58 by waon-in          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,11 +28,16 @@ typedef struct s_list
 }						t_list;
 
 // MAIN
-char	get_next_line(int fd);
+char	*get_next_line(int fd);
+char	*line_next(t_list *list);
+
+void	append(t_list **list, char *buf);
+void	create_list(t_list **list, int fd);
+void	polish_list(t_list **list);
 
 // UNTILS
 int		len_node(t_list *list);
-int		*found_newline(t_list *list);
+int		found_newline(t_list *list);
 
 t_list	*find_last_node(t_list *list);
 
