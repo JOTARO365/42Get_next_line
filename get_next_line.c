@@ -6,7 +6,7 @@
 /*   By: waon-in <waon-in@student.42>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/19 19:39:01 by waon-in           #+#    #+#             */
-/*   Updated: 2024/01/12 23:32:36 by waon-in          ###   ########.fr       */
+/*   Updated: 2024/01/13 20:17:37 by waon-in          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,13 +95,49 @@ char	*get_next_line(int fd)
 	static t_list	*list;
 	char			*next_line;
 
-	list = NULL;
 	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, &next_line, 0) < 0)
-		return (NULL);
+		return (0);
 	create_list(&list, fd);
 	if (list == NULL)
-		return (NULL);
+	{
+		return (NULL);	
+	}
 	next_line = line_next(list);
 	polish_list(&list);
 	return (next_line);
 }
+// #include <stdio.h>
+// int	main(void)
+// {
+// 	int	fd;
+// 	char *line;
+
+// 	fd = open("read_error.txt",O_RDONLY);
+
+// 	if ((line = get_next_line(fd)) != NULL)
+// 	{
+// 		printf("GNL : %s\n", line);
+// 		free(line);
+// 	}
+// 	else
+// 		printf("gnl = No DATA\n");
+	
+// 	FILE *real;
+
+// 	real = fopen("read_error.txt","r");
+	
+// 	if (real != NULL )
+// 	{
+// 		char	buffer[BUFFER_SIZE];
+// 		while (fgets(buffer, BUFFER_SIZE, real))
+// 		{
+// 			printf("REAL : %s\n", buffer);
+// 		}
+// 		fclose(real);
+// 	}
+	
+	
+	
+// 	close(fd);
+// 	return (0);
+// }
