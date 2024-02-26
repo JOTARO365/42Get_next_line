@@ -6,13 +6,13 @@
 /*   By: waon-in <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 16:47:20 by waon-in           #+#    #+#             */
-/*   Updated: 2024/02/22 00:50:27 by waon-in          ###   ########.fr       */
+/*   Updated: 2024/02/27 00:00:24 by waon-in          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-int	len_buffer(t_list *list)
+int	len_memo(t_list *list)
 {
 	int	i;
 	int	len;
@@ -22,10 +22,12 @@ int	len_buffer(t_list *list)
 	len = 0;
 	while (list)
 	{
-		i = 0;
-		while (list->buffer[i])
+		e (list)
+        {
+i = 0;
+		while (list->memo[i])
 		{
-			if (list->buffer[i] == '\n')
+			if (list->memo[i] == '\n')
 			{
 				++len;
 				return (len);
@@ -44,34 +46,75 @@ t_list	*find_last_node(t_list *list)
 		return (NULL);
 	while (list->next != NULL)
 		list = list->next;
-	if (list->buffer == NULL)
+	if (list->memo == NULL)
 		return (NULL);
 	return (list);
 }
 
-int	main()
+void	get_str(t_list *list, char *str)
 {
-	t_list node1,node2,node3;
+	int	len;
+	int	i;
 
-	node1.buffer = "test\n";
-	node1.next = &node2;
-	node2.buffer = "for\n";
-	node2.next = &node3;
-	node3.buffer = "function\n";
-	node3.next = NULL;
-
-	t_list *last_node = find_last_node(&node1);
-
-	if (last_node != NULL)
+	if (list == NULL)
+		return ;
+	len = 0;
+	while (list)
 	{
-		printf("test function find_last_node\n");
-		printf("data last node : %s\n",last_node->buffer);
+		i = 0;
+		while (list->memo[i])
+		{
+			if (list->memo[i] == '\n')
+			{
+				str[len++] = '\n';
+				str[len] = '\0';
+			}
+			str[len++] = list->memo[i++];
+		}
+		list = list->next;
 	}
+	str[len] = '\0';
+}
+
+int	get_new_line(t_list *list)
+{
+	int	i;
+
+	if (list == NULL)
+		return (0);
+	while (list)
+	{
+		i = 0;
+		while (list->memo[i])
+		{
+			if (list->memo[i] == '\n' && i < BUFFER_SIZE)
+				return (1);
+			i++;
+		}
+		list = list->next;
+	}
+	return (0);
+}
+
+void	*free_node(t_list **list, t_list *clean, char *buf)
+{
+	t_list	*tmp;
+
+	if (*list == NULL)
+		return ;
+	while (*list)
+	{
+		tmp = (*list)->next;
+		free((*list)->memo);
+		free(*list);
+		*list = tmp;
+	}
+	*list = NULL;
+	if (clean->memo[0])
+		*list = clean;
 	else
 	{
-		printf("test function find_last_node\n");
-		printf("data last node is NULL\n");
+		free(buf);
+		free(clean);
 	}
-	printf("test function len_node : %d\n",len_buffer(&node1));
-	return (0);
 }
