@@ -5,12 +5,55 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: waon-in <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/18 22:46:28 by waon-in           #+#    #+#             */
-/*   Updated: 2024/02/27 01:00:12 by waon-in          ###   ########.fr       */
+/*   Created: 2024/02/27 23:21:46 by waon-in           #+#    #+#             */
+/*   Updated: 2024/02/28 21:35:57 by waon-in          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
+
+void	list_check(t_list **list)
+{
+	t_list		*last_node;
+	t_list		*clean_node;
+	char		*buf;
+	int			i;
+	int			j;
+
+	buf = malloc(BUFFER_SIZE + 1);
+	clean_node = malloc(sizeof(t_list));
+	if (buf == NULL || clean_node == NULL)
+	{
+		free_node(list, clean_node, buf);
+		return ;
+	}
+	last_node = find_last_node(*list);
+	i = 0;
+	while (last_node->memo[i] && last_node->memo[i] != '\n')
+		++i;
+	j = 0;
+	while (last_node->memo[i] && last_node->memo[++i])
+		buf[j++] = last_node->memo[i];
+	buf[j] = '\0';
+	clean_node->memo = buf;
+	clean_node->next = NULL;
+	free_node(list, clean_node, buf);
+}
+
+char	*ft_next_line(t_list *list)
+{
+	char	*buf;
+	int		len;
+
+	if (list == NULL)
+		return (NULL);
+	len = len_memo(list);
+	buf = malloc(len + 1);
+	if (buf == NULL)
+		return (NULL);
+	get_str(list, buf);
+	return (buf);
+}
 
 void	ft_append(t_list **list, char *buf)
 {
@@ -21,100 +64,55 @@ void	ft_append(t_list **list, char *buf)
 	last_node = find_last_node(*list);
 	if (new_node == NULL)
 		return ;
+	new_node->memo = buf;
+	new_node->next = NULL;
 	if (last_node == NULL)
 		*list = new_node;
 	else
-		(*list)->next = new_node;
-	(*list)->memo = buf;
-	(*list)->next = NULL;
+		last_node->next = new_node;
 }
 
-void	create_list(t_list **list, int fd)
+char	create_list(t_list **list, int fd)
 {
-	int	read_line;
+	int		read_line;
 	char	*buf;
 
 	while (!get_new_line(*list))
 	{
 		buf = malloc(BUFFER_SIZE + 1);
 		if (buf == NULL)
-			return ;
+			return (1);
 		read_line = read(fd, buf, BUFFER_SIZE);
-		if (!read_line)
+		if (read_line <= 0)
 		{
 			free(buf);
-			return ;
+			if (read_line < 0)
+				return (1);
+			return (0);
 		}
 		buf[read_line] = '\0';
 		ft_append(list, buf);
 	}
+	return (0);
 }
 
-char	get_next_line(int fd)
+char	*get_next_line(int fd)
 {
-	static t_list *list;
-	char	*next_line;
+	static t_list		*list;
+	char				*buf;
+	char				err;
 
-	
-}
-/*
-int	main(void)
-{
-	int fd1 = open("empty.txt",O_RDONLY);
-	int fd2 = open("alternate_line_nl_no_nl",O_RDONLY);
-	int fd3 = open("test.txt",O_RDONLY);
-	char *a = "kuy";
-	
-	t_list *list = NULL;
-
-	list->memo = a;
-	printf("fd =  %d\n",fd1);
-	printf("fd =  %d\n",fd2);
-	printf("fd =  %d\n",fd3);
-	if (fd1 != -1 || fd2 != -1)
+	if (fd < 0 || BUFFER_SIZE <= 0)
+		return (NULL);
+	err = create_list(&list, fd);
+	if (err)
 	{
-		//read(fd1, buffer,sizeof(buffer));
-		create_list(&list, fd2);
-		printf(" read result = %s\n", list->memo);
-		printf(" read result by create_list = %s\n", list->memo);
+		free_node(&list, NULL, NULL);
+		return (NULL);
 	}
-	close(fd1);
-	close(fd2);
-
-	return (0);
-}*/
-/*
-int	main(void)
-{
-	t_list *node = NULL;
-
-	char str[] = NULL;
-	ft_append(&node,str);
-	printf("result ft_append : %s\n",str);
-	return (0);
-}
-*/
-int main(void)
-{
-    int fd = open("test.txt", O_RDONLY); // เปิดไฟล์ "test.txt" สำหรับอ่านเท่านั้น
-    if (fd == -1)
-    {
-        perror("Failed to open file");
-        return 1;
-    }
-
-    t_list *list = NULL; // สร้าง pointer ชื่อ list และกำหนดค่าเริ่มต้นให้เป็น NULL
-
-    create_list(&list, fd); // เรียกใช้ฟังก์ชัน create_list เพื่อสร้างรายการและอ่านข้อมูลจากไฟล์
-    
-    // พิมพ์ข้อมูลที่ถูกอ่านจากไฟล์
-    t_list *current = list;
-    while (current != NULL)
-    {
-        printf("%s\n", current->memo);
-        current = current->next;
-    }
-
-    close(fd); // ปิดไฟล์ที่เปิด
-    return 0;
+	if (list == NULL)
+		return (NULL);
+	buf = ft_next_line(list);
+	list_check(&list);
+	return (buf);
 }

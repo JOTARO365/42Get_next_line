@@ -6,7 +6,7 @@
 /*   By: waon-in <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 16:47:20 by waon-in           #+#    #+#             */
-/*   Updated: 2024/02/27 00:00:24 by waon-in          ###   ########.fr       */
+/*   Updated: 2024/02/28 11:48:14 by waon-in          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,9 +22,7 @@ int	len_memo(t_list *list)
 	len = 0;
 	while (list)
 	{
-		e (list)
-        {
-i = 0;
+		i = 0;
 		while (list->memo[i])
 		{
 			if (list->memo[i] == '\n')
@@ -46,8 +44,6 @@ t_list	*find_last_node(t_list *list)
 		return (NULL);
 	while (list->next != NULL)
 		list = list->next;
-	if (list->memo == NULL)
-		return (NULL);
 	return (list);
 }
 
@@ -68,6 +64,7 @@ void	get_str(t_list *list, char *str)
 			{
 				str[len++] = '\n';
 				str[len] = '\0';
+				return ;
 			}
 			str[len++] = list->memo[i++];
 		}
@@ -85,18 +82,18 @@ int	get_new_line(t_list *list)
 	while (list)
 	{
 		i = 0;
-		while (list->memo[i])
+		while (list->memo[i] && i < BUFFER_SIZE)
 		{
-			if (list->memo[i] == '\n' && i < BUFFER_SIZE)
+			if (list->memo[i] == '\n')
 				return (1);
-			i++;
+			++i;
 		}
 		list = list->next;
 	}
 	return (0);
 }
 
-void	*free_node(t_list **list, t_list *clean, char *buf)
+void	free_node(t_list **list, t_list *clean_node, char *buf)
 {
 	t_list	*tmp;
 
@@ -110,11 +107,11 @@ void	*free_node(t_list **list, t_list *clean, char *buf)
 		*list = tmp;
 	}
 	*list = NULL;
-	if (clean->memo[0])
-		*list = clean;
+	if (buf && clean_node->memo[0])
+		*list = clean_node;
 	else
 	{
 		free(buf);
-		free(clean);
+		free(clean_node);
 	}
 }
