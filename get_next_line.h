@@ -13,23 +13,29 @@
 #ifndef GET_NEXT_LINE_H
 # define GET_NEXT_LINE_H
 
-# define BUFFER_SIZE 1024
+#include <stdlib.h>
+#include <unistd.h>
 
-# include <unistd.h>
-# include <stdlib.h>
-# include <fcntl.h>
+#ifndef BUFFER_SIZE
+#define BUFFER_SIZE 1024
+#endif
+
+#ifndef FD_MAX
+#define FD_MAX 1024
+#endif
+
 
 typedef struct s_list
 {
-	char			*buf;
-	size_t			len;
-	struct s_list	*next;
-}		t_list;
+    char		*content;
+    struct s_list *next;
+} t_list;
 
-size_t	ft_strlen(char *str);
-char	*ft_substr(char const *s, unsigned int start, size_t len);
-char	*ft_strchr(const char *, int c);
-t_list	*ft_lstlast(t_list *lst);
 
+size_t ft_strlen(const char *s);
+char *ft_strchr(const char *s, int c);
+char *ft_substr(char const *s, unsigned int start, size_t len);
+char *ft_strjoin(char const *s1, char const *s2);
+t_list *ft_lstlast(t_list *lst);
 
 #endif
