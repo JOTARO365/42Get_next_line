@@ -12,128 +12,110 @@
 
 #include "get_next_line.h"
 
-t_list *create_node(char *content)
+static t_fd_node *find_or_create_fd(t_fd_list *list, int fd)
 {
-    t_list *node = malloc(sizeof(t_list));
-    if (!node)
-        return (NULL);
-    node->content = content;
-    node->next = NULL;
-    return (node);
-}
+    t_fd_node *current = list->head;
+    t_fd_node *new_node;
 
-// Helper function to free buffer list
-void free_buffer(t_list **buffer)
-{
-    t_list *current;
-    t_list *next;
-
-    if (!buffer || !*buffer)
-        return;
-    current = *buffer;
     while (current)
     {
-        next = current->next;
-        free(current->content);
-        free(current);
-        current = next;
+        if (current->fd == fd)
+            return (current);
+        current = current->next;
     }
-    *buffer = NULL;
+    new_node = malloc(sizeof(t_fd_node));
+    if (!new_node)
+        return (NULL);
+    new_node->fd = fd;
+    new_node->buffer = ft_strdup("");
+    new_node->next = list->head;
+    list->head = new_node;
+    list->count++;
+    if (!new_node->buffer)
+    {
+        free(new_node);
+        return (NULL);
+    }
+    return (new_node);
 }
 
-// Helper function to read and store in buffer
-void read_to_buffer(int fd, t_list **buffer)
+static void cleanup_fd_node(t_fd_list *list, int fd)
 {
-    char *temp;
-    t_list *new_node;
-    int bytes_read;
+    t_fd_node *current = list->head;
+    t_fd_node *prev = NULL;
 
-    temp = malloc(BUFFER_SIZE + 1);
-    if (!temp)
-        return;
-    bytes_read = read(fd, temp, BUFFER_SIZE);
-    while (bytes_read > 0)
+    while (current)
     {
-        temp[bytes_read] = '\0';
-        new_node = create_node(temp);
-        if (!new_node)
-            return;
-        if (!*buffer)
-            *buffer = new_node;
-        else
-            ft_lstlast(*buffer)->next = new_node;
-        if (ft_strchr(temp, '\n'))
-            break;
-        temp = malloc(BUFFER_SIZE + 1);
-        if (!temp)
-            return;
-        bytes_read = read(fd, temp, BUFFER_SIZE);
-    }
-    if (bytes_read <= 0)
-        free(temp);
-}
-
-// Helper function to extract line from buffer
-char *extract_line(t_list **buffer)
-{
-    char *line = NULL;
-    char *temp;
-    char *newline_pos;
-    char *remaining;
-    t_list *first_node;
-
-    while (*buffer)
-    {
-        temp = line;
-        line = ft_strjoin(temp, (*buffer)->content);
-        free(temp);
-        newline_pos = ft_strchr((*buffer)->content, '\n');
-        if (newline_pos)
+        if (current->fd == fd)
         {
-            remaining = ft_substr(newline_pos + 1, 0, ft_strlen(newline_pos + 1));
-            first_node = *buffer;
-            *buffer = (*buffer)->next;
-            free(first_node->content);
-            free(first_node);
-            if (remaining && *remaining)
-            {
-                first_node = create_node(remaining);
-                first_node->next = *buffer;
-                *buffer = first_node;
-            }
+            if (prev)
+                prev->next = current->next;
             else
-                free(remaining);
-            break;
+                list->head = current->next;
+            free(current->buffer);
+            free(current);
+            list->count--;
+            return;
         }
-        first_node = *buffer;
-        *buffer = (*buffer)->next;
-        free(first_node->content);
-        free(first_node);
+        prev = current;
+        current = current->next;
     }
-    if (line && ft_strchr(line, '\n'))
-    {
-        newline_pos = ft_strchr(line, '\n');
-        *(newline_pos + 1) = '\0';
-    }
-    return (line);
 }
 
-// Main get_next_line function with multiple fd support
+static char *extract_line(t_fd_node *node, t_fd_list *list)
+{
+    char *line;
+    char *newline_pos;
+    char *temp;
+    size_t line_len;
+
+    newline_pos = ft_strchr(node->buffer, '\n');
+    if (newline_pos)
+    {
+        line_len = newline_pos - node->buffer + 1;
+        line = ft_substr(node->buffer, 0, line_len);
+        temp = ft_substr(node->buffer, line_len, ft_strlen(node->buffer) - line_len);
+        free(node->buffer);
+        node->buffer = temp;
+        return (line);
+    }
+    if (ft_strlen(node->buffer) > 0)
+    {
+        line = ft_strdup(node->buffer);
+        cleanup_fd_node(list, node->fd);
+        return (line);
+    }
+    cleanup_fd_node(list, node->fd);
+    return (NULL);
+}
+
 char *get_next_line(int fd)
 {
-    static t_list *buffers[FD_MAX];
-    char *line;
+    static t_fd_list fd_list = {NULL, 0};
+    t_fd_node *node;
+    char buffer[BUFFER_SIZE + 1];
+    char *temp;
+    ssize_t bytes_read;
 
     if (fd < 0 || fd >= FD_MAX || BUFFER_SIZE <= 0)
         return (NULL);
-    read_to_buffer(fd, &buffers[fd]);
-    if (!buffers[fd])
+    node = find_or_create_fd(&fd_list, fd);
+    if (!node)
         return (NULL);
-    line = extract_line(&buffers[fd]);
-    if (!line)
+    while (!ft_strchr(node->buffer, '\n'))
     {
-        free_buffer(&buffers[fd]);
-        return (NULL);
+        bytes_read = read(fd, buffer, BUFFER_SIZE);
+        if (bytes_read <= 0)
+            break;
+        buffer[bytes_read] = '\0';
+        temp = ft_strjoin(node->buffer, buffer);
+        free(node->buffer);
+        node->buffer = temp;
+        if (!node->buffer)
+        {
+            cleanup_fd_node(&fd_list, fd);
+            return (NULL);
+        }
     }
-    return (line);
-}	
+    return (extract_line(node, &fd_list));
+}

@@ -12,7 +12,6 @@
 
 #include "get_next_line.h"
 
-// ft_strlen - Returns length of string
 size_t ft_strlen(const char *s)
 {
     size_t len = 0;
@@ -90,12 +89,24 @@ char *ft_strjoin(char const *s1, char const *s2)
     return (joined);
 }
 
-// ft_lstlast - Returns last element of list
-t_list *ft_lstlast(t_list *lst)
+// ft_strdup - Duplicates string
+char *ft_strdup(const char *s)
 {
-    if (!lst)
+    char *dup;
+    size_t i = 0;
+    size_t len;
+
+    if (!s)
         return (NULL);
-    while (lst->next)
-        lst = lst->next;
-    return (lst);
+    len = ft_strlen(s);
+    dup = malloc(len + 1);
+    if (!dup)
+        return (NULL);
+    while (s[i])
+    {
+        dup[i] = s[i];
+        i++;
+    }
+    dup[i] = '\0';
+    return (dup);
 }

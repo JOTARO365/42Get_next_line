@@ -13,29 +13,35 @@
 #ifndef GET_NEXT_LINE_H
 # define GET_NEXT_LINE_H
 
-#include <stdlib.h>
-#include <unistd.h>
+# include <stdlib.h>
+# include <unistd.h>
 
-#ifndef BUFFER_SIZE
-#define BUFFER_SIZE 1024
-#endif
+# ifndef BUFFER_SIZE
+#  define BUFFER_SIZE 1024
+# endif
 
-#ifndef FD_MAX
-#define FD_MAX 1024
-#endif
+# ifndef FD_MAX
+#  define FD_MAX 1024
+# endif
 
-
-typedef struct s_list
+typedef struct s_fd_node
 {
-    char		*content;
-    struct s_list *next;
-} t_list;
+    int                 fd;
+    char                *buffer;
+    struct s_fd_node    *next;
+}   t_fd_node;
 
+typedef struct s_fd_list
+{
+    t_fd_node   *head;
+    int         count;
+}   t_fd_list;
 
-size_t ft_strlen(const char *s);
-char *ft_strchr(const char *s, int c);
-char *ft_substr(char const *s, unsigned int start, size_t len);
-char *ft_strjoin(char const *s1, char const *s2);
-t_list *ft_lstlast(t_list *lst);
+char	*get_next_line(int fd);
+size_t	ft_strlen(const char *s);
+char	*ft_strchr(const char *s, int c);
+char	*ft_substr(char const *s, unsigned int start, size_t len);
+char	*ft_strjoin(char const *s1, char const *s2);
+char	*ft_strdup(const char *s);
 
 #endif
