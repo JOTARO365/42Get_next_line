@@ -15,6 +15,8 @@
 
 # include <stdlib.h>
 # include <unistd.h>
+# include <stdio.h>
+# include <fcntl.h>
 
 # ifndef BUFFER_SIZE
 #  define BUFFER_SIZE 1024
@@ -24,24 +26,19 @@
 #  define FD_MAX 1024
 # endif
 
-typedef struct s_fd_node
+typedef struct s_gnl_node
 {
-    int                 fd;
-    char                *buffer;
-    struct s_fd_node    *next;
-}   t_fd_node;
+	int						fd;
+	char					*buf;
+	struct s_gnl_node		*next;
+}	gnl_node;
 
-typedef struct s_fd_list
-{
-    t_fd_node   *head;
-    int         count;
-}   t_fd_list;
 
-char	*get_next_line(int fd);
-size_t	ft_strlen(const char *s);
-char	*ft_strchr(const char *s, int c);
-char	*ft_substr(char const *s, unsigned int start, size_t len);
-char	*ft_strjoin(char const *s1, char const *s2);
-char	*ft_strdup(const char *s);
+char		*get_next_line(int fd);
+gnl_node	*find_fd_node(gnl_node **lst, int fd);
+size_t		ft_strlen(const char *s);
+void		*remove_fd_node(gnl_node **lst, int fd);
+char		*ft_strchr(const char *s, int c);
+char		*ft_strjoin(char const *s1, char const *s2);
 
 #endif

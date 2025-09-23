@@ -12,110 +12,103 @@
 
 #include "get_next_line.h"
 
-static t_fd_node *find_or_create_fd(t_fd_list *list, int fd)
+char	*read_and_store(int fd, char *stash)
 {
-    t_fd_node *current = list->head;
-    t_fd_node *new_node;
+	char		*res;
+	ssize_t		file;
+	char		*tmp;
 
-    while (current)
-    {
-        if (current->fd == fd)
-            return (current);
-        current = current->next;
-    }
-    new_node = malloc(sizeof(t_fd_node));
-    if (!new_node)
-        return (NULL);
-    new_node->fd = fd;
-    new_node->buffer = ft_strdup("");
-    new_node->next = list->head;
-    list->head = new_node;
-    list->count++;
-    if (!new_node->buffer)
-    {
-        free(new_node);
-        return (NULL);
-    }
-    return (new_node);
+	file = 1;
+	res = malloc(BUFFER_SIZE + 1);
+	if (!res)
+		return (NULL);
+	while (stash == NULL || !ft_strchr(stash, '\n') && file > 0)
+	{
+		file = read(fd, res, BUFFER_SIZE);
+		if (file == -1)
+			return (free(res), free(stash), NULL);
+	}
+	res[file] = '\0';
+	if (file > 0)
+	{
+		tmp = ft_strjoin(stash, res);
+		free(stash);
+		stash = tmp;
+		if (!stash)
+			return (free(res), NULL);
+	}
+
 }
 
-static void cleanup_fd_node(t_fd_list *list, int fd)
+char	*update_stash(char *stash)
 {
-    t_fd_node *current = list->head;
-    t_fd_node *prev = NULL;
+	char	*new;
+	size_t	i;
+	size_t	j;
 
-    while (current)
-    {
-        if (current->fd == fd)
-        {
-            if (prev)
-                prev->next = current->next;
-            else
-                list->head = current->next;
-            free(current->buffer);
-            free(current);
-            list->count--;
-            return;
-        }
-        prev = current;
-        current = current->next;
-    }
+	if (!stash)
+		return (NULL);
+	i = 0;
+	while (stash[i] && stash[i] != '\n')
+		i++;
+	if (!stash[i])
+		return (free(stash), NULL);
+	i++;
+	new	= malloc(ft_strlen(stash + i) + 1);
+	if (!new)
+		return (free(stash), NULL);
+	j = 0;
+	while (stash[i])
+		new[j++] = stash[i++];
+	new[j] = '\0';
+	return (free(stash), new);
 }
 
-static char *extract_line(t_fd_node *node, t_fd_list *list)
+char	*extract_line(const char *stash)
 {
-    char *line;
-    char *newline_pos;
-    char *temp;
-    size_t line_len;
+	size_t	i;
+	size_t	j;
+	size_t	len;
+	char	*line;
 
-    newline_pos = ft_strchr(node->buffer, '\n');
-    if (newline_pos)
-    {
-        line_len = newline_pos - node->buffer + 1;
-        line = ft_substr(node->buffer, 0, line_len);
-        temp = ft_substr(node->buffer, line_len, ft_strlen(node->buffer) - line_len);
-        free(node->buffer);
-        node->buffer = temp;
-        return (line);
-    }
-    if (ft_strlen(node->buffer) > 0)
-    {
-        line = ft_strdup(node->buffer);
-        cleanup_fd_node(list, node->fd);
-        return (line);
-    }
-    cleanup_fd_node(list, node->fd);
-    return (NULL);
+	i = 0;
+	if (!stash[i] || !stash[0])
+		return (NULL);
+	while (stash[i] && stash[i] != '\n')
+		i++;
+	len = i + (stash[i] == '\n');
+	line = malloc(len + 1);
+	if (!line)
+		return (NULL);
+	j = 0;
+	while (j < i)
+	{
+		line[j] = stash[j];
+		j++;
+	}
+	if (len > i)
+		line[i++] = '\n';
+	line[i] = '\0';
+	return (line);
 }
 
-char *get_next_line(int fd)
+char	*get_next_line(int fd)
 {
-    static t_fd_list fd_list = {NULL, 0};
-    t_fd_node *node;
-    char buffer[BUFFER_SIZE + 1];
-    char *temp;
-    ssize_t bytes_read;
+	static gnl_node		*file_d;
+	gnl_node			*node;
+	char				*line;
 
-    if (fd < 0 || fd >= FD_MAX || BUFFER_SIZE <= 0)
-        return (NULL);
-    node = find_or_create_fd(&fd_list, fd);
-    if (!node)
-        return (NULL);
-    while (!ft_strchr(node->buffer, '\n'))
-    {
-        bytes_read = read(fd, buffer, BUFFER_SIZE);
-        if (bytes_read <= 0)
-            break;
-        buffer[bytes_read] = '\0';
-        temp = ft_strjoin(node->buffer, buffer);
-        free(node->buffer);
-        node->buffer = temp;
-        if (!node->buffer)
-        {
-            cleanup_fd_node(&fd_list, fd);
-            return (NULL);
-        }
-    }
-    return (extract_line(node, &fd_list));
+	if (fd < 0 || fd >= FD_MAX || BUFFER_SIZE <= 0)
+		return (NULL);
+	node = find_fd_node(&file_d, fd);
+	if (!node)
+		return (NULL);
+	node->buf = read_and_store(fd, node->buf);
+	if (!node->buf)
+		return (remove_fd_node(node->buf, fd), NULL);
+	line = extract_line(node->buf);
+	node->buf = update_stash(node->buf);
+	if (!node->buf)
+		remove_fd_node(&file_d, fd);
+	return (line);
 }
