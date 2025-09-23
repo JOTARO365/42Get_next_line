@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line_utils_bonus.c                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: wiaon-in <wiaon-in@42.fr>                  +#+  +:+       +#+        */
+/*   By: wiaon-in <wiaon-in@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/23 11:43:11 by wiaon-in          #+#    #+#             */
-/*   Updated: 2025/09/23 11:44:20 by wiaon-in         ###   ########.fr       */
+/*   Updated: 2025/09/23 22:09:08 by wiaon-in         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,22 +16,29 @@ size_t	ft_strlen(const char *s)
 {
 	size_t	i;
 
+	if (!s)
+		return (0);
 	i = 0;
-	while (*s)
+	while (s[i])
 		i++;
 	return (i);
 }
 
 char	*ft_strchr(const char *s, int c)
 {
+	unsigned char	ch;
+
+	if (!s)
+		return (NULL);
+	ch = (unsigned char)c;
 	while (*s)
 	{
-		if (s == (char )c)
-			return ((char )s);
+		if ((unsigned char)*s == ch)
+			return ((char *)s);
 		s++;
 	}
-	if ((char )c == '\0')
-		return ((char )s);
+	if (ch == '\0')
+		return ((char *)s);
 	return (NULL);
 }
 
@@ -41,7 +48,9 @@ char	*ft_strjoin(const char *s1, const char *s2)
 	size_t	i;
 	size_t	j;
 
-	res = malloc(sizeof(char ) * (ft_strlen(s1) + ft_strlen(s2) + 1));
+	if (!s1 && !s2)
+		return (NULL);
+	res = (char *)malloc(ft_strlen(s1) + ft_strlen(s2) + 1);
 	if (!res)
 		return (NULL);
 	i = 0;
@@ -53,51 +62,54 @@ char	*ft_strjoin(const char *s1, const char *s2)
 	j = 0;
 	while (s2 && s2[j])
 	{
-		res[i + j] = s2[i];
+		res[i + j] = s2[j];
 		j++;
 	}
-	res[j] ='\0';
+	res[i + j] = '\0';
 	return (res);
 }
 
-gnl_node	*find_fd_node(gnl_node **lst, int fd)
+t_gnl_node	*find_fd_node(t_gnl_node **lst, int fd)
 {
-	gnl_node	*current;
+	t_gnl_node	*cur;
 
-	current = *lst;
-	while (current)
+	cur = *lst;
+	while (cur)
 	{
-		if (current->fd == fd)
-			return (current);
-		current = malloc(sizeof(gnl_node));
-		if (!current)
-			return (NULL);
-		current->fd = fd;
-		current->buf = NULL;
-		current->next = *lst;
-		*lst = current;
-		return (current);
+		if (cur->fd == fd)
+			return (cur);
+		cur = cur->next;
 	}
+	cur = (t_gnl_node *)malloc(sizeof(t_gnl_node));
+	if (!cur)
+		return (NULL);
+	cur->fd = fd;
+	cur->buf = NULL;
+	cur->next = *lst;
+	*lst = cur;
+	return (cur);
 }
 
-void	*remove_fd_node(gnl_node **lst, int fd)
+void	remove_fd_node(t_gnl_node **lst, int fd)
 {
-	gnl_node	*prev;
-	gnl_node	*current;
+	t_gnl_node	*prev;
+	t_gnl_node	*cur;
 
 	prev = NULL;
-	current = *lst;
-	while (current)
+	cur = *lst;
+	while (cur)
 	{
-		if (current->fd == fd)
+		if (cur->fd == fd)
 		{
 			if (prev)
-				prev->next = current->next;
+				prev->next = cur->next;
 			else
-				*lst = current->next;
-			free(current->buf);
-			free(current);
+				*lst = cur->next;
+			free(cur->buf);
+			free(cur);
 			return ;
 		}
+		prev = cur;
+		cur = cur->next;
 	}
 }

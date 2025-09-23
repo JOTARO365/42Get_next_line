@@ -31,13 +31,12 @@ typedef struct s_gnl_node
 	int						fd;
 	char					*buf;
 	struct s_gnl_node		*next;
-}	gnl_node;
-
+}	t_gnl_node;
 
 char		*get_next_line(int fd);
-gnl_node	*find_fd_node(gnl_node **lst, int fd);
+t_gnl_node	*find_fd_node(t_gnl_node **lst, int fd);
 size_t		ft_strlen(const char *s);
-void		*remove_fd_node(gnl_node **lst, int fd);
+void		remove_fd_node(t_gnl_node **lst, int fd);
 char		*ft_strchr(const char *s, int c);
 char		*ft_strjoin(char const *s1, char const *s2);
 

@@ -14,34 +14,36 @@
 
 char	*read_and_store(int fd, char *stash)
 {
-	char		*res;
-	ssize_t		file;
+	char		*buf;
+	ssize_t		br;
 	char		*tmp;
 
-	file = 1;
-	res = malloc(BUFFER_SIZE + 1);
-	if (!res)
+	buf = (char *)malloc(BUFFER_SIZE + 1);
+	if (!buf)
 		return (NULL);
-	while (stash == NULL || !ft_strchr(stash, '\n') && file > 0)
+	br = 1;
+	while ((stash == NULL || !ft_strchr(stash, '\n')) && br > 0)
 	{
-		file = read(fd, res, BUFFER_SIZE);
-		if (file == -1)
-			return (free(res), free(stash), NULL);
+		br = read(fd, buf, BUFFER_SIZE);
+		if (br == -1)
+			return (free(buf), free(stash), NULL);
+		buf[br] = '\0';
+		if (br > 0)
+		{
+			tmp = ft_strjoin(stash, buf);
+			free(stash);
+			stash = tmp;
+			if (!stash)
+				return (free(buf), NULL);
+		}
 	}
-	res[file] = '\0';
-	if (file > 0)
-	{
-		tmp = ft_strjoin(stash, res);
-		free(stash);
-		stash = tmp;
-		if (!stash)
-			return (free(res), NULL);
-	}
+	free(buf);
+	return (stash);
 }
 
 char	*update_stash(char *stash)
 {
-	char	*new;
+	char	*new_s;
 	size_t	i;
 	size_t	j;
 
@@ -53,37 +55,38 @@ char	*update_stash(char *stash)
 	if (!stash[i])
 		return (free(stash), NULL);
 	i++;
-	new	= malloc(ft_strlen(stash + i) + 1);
-	if (!new)
+	new_s = (char *)malloc(ft_strlen(stash + i) + 1);
+	if (!new_s)
 		return (free(stash), NULL);
 	j = 0;
 	while (stash[i])
-		new[j++] = stash[i++];
-	new[j] = '\0';
-	return (free(stash), new);
+		new_s[j++] = stash[i++];
+	new_s[j] = '\0';
+	free(stash);
+	return (new_s);
 }
 
 char	*extract_line(const char *stash)
 {
 	size_t	i;
-	size_t	j;
+	size_t	k;
 	size_t	len;
 	char	*line;
 
-	i = 0;
-	if (!stash[i] || !stash[0])
+	if (!stash || !stash[0])
 		return (NULL);
+	i = 0;
 	while (stash[i] && stash[i] != '\n')
 		i++;
 	len = i + (stash[i] == '\n');
-	line = malloc(len + 1);
+	line = (char *)malloc(len + 1);
 	if (!line)
 		return (NULL);
-	j = 0;
-	while (j < i)
+	k = 0;
+	while (k < i)
 	{
-		line[j] = stash[j];
-		j++;
+		line[k] = stash[k];
+		k++;
 	}
 	if (len > i)
 		line[i++] = '\n';
@@ -93,21 +96,21 @@ char	*extract_line(const char *stash)
 
 char	*get_next_line(int fd)
 {
-	static gnl_node		*file_d;
-	gnl_node			*node;
+	static t_gnl_node	*files;
+	t_gnl_node			*node;
 	char				*line;
 
 	if (fd < 0 || fd >= FD_MAX || BUFFER_SIZE <= 0)
 		return (NULL);
-	node = find_fd_node(&file_d, fd);
+	node = find_fd_node(&files, fd);
 	if (!node)
 		return (NULL);
 	node->buf = read_and_store(fd, node->buf);
 	if (!node->buf)
-		return (remove_fd_node(node->buf, fd), NULL);
+		return (remove_fd_node(&files, fd), NULL);
 	line = extract_line(node->buf);
 	node->buf = update_stash(node->buf);
 	if (!node->buf)
-		remove_fd_node(&file_d, fd);
+		remove_fd_node(&files, fd);
 	return (line);
 }
