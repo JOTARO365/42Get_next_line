@@ -37,7 +37,6 @@ char	*read_and_store(int fd, char *stash)
 		if (!stash)
 			return (free(res), NULL);
 	}
-
 }
 
 char	*update_stash(char *stash)
